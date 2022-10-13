@@ -1,11 +1,5 @@
-const post = require("../models/posts");
+const Post = require("../models/posts");
 const fs = require("fs");
-/* --- ASTUCE!: les middlewears suivant utilisent des spread operator(fr:décomposition) : '...'
-cette synthaxe permet d'appeler tous les itérables de tableau ou d'objets (toutes les 
-clés de chaque posts requétées dans notre cas). Pour plus d'expliquations, voir :
-https://www.devenir-webmaster.com/V2/TUTO/CHAPITRE/JAVASCRIPT/56-destructuring-spread-operator/
-https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/Spread_syntax#exemple_interactif
---- */
 
 exports.getAllPosts = (req, res, next) => {
   post.find()
@@ -19,8 +13,8 @@ exports.getAllPosts = (req, res, next) => {
     });
 };
 
-exports.getpost = (req, res, next) => {
-  post.findOne({ _id: req.params.id })
+exports.getPost = (req, res, next) => {
+  Post.findOne({ _id: req.params.id })
     .then((post) => {
       post.dislikes = post.usersDisliked.length;
       post.likes = post.usersLiked.length;
@@ -33,15 +27,19 @@ exports.getpost = (req, res, next) => {
     });
 };
 
-exports.createpost = (req, res, next) => {
+exports.createPost = (req, res, next) => {
   //la requète est convertis en form/data(String) par mutler il faut donc la parser
-  const postObject = JSON.parse(req.body.post);
+  if (req.file) {
+     console.log("postObject contenant une image: "+ req.file);
+  }
+  const postObject = req.body;
+ 
   //Suppression de l'userId reçu du client par sécurité
   delete postObject._id;
-  const post = new post({
+  const post = new Post({
     ...postObject,
     //Récupération de l'userId dans le jeton d'authorization (req.auth)
-    userId: req.auth.userId,
+    author: req.auth.userId,
     //Construction de l'URL pour stocker l'image dans le dossier pointé par le middlewear multer-conf.js
     imageUrl: `${req.protocol}://${req.get("host")}/images/${
       req.file.filename
@@ -49,12 +47,12 @@ exports.createpost = (req, res, next) => {
   });
   post
     .save()
-    .then(() => res.status(201).json({ message: "Recette ajoutée !" }))
+    .then(() => res.status(201).json({ message: "Publication postée !" }))
     .catch((error) => res.status(400).json({ message: error }));
 };
 
-exports.modifypost = async (req, res, next) => {
-  const postTargeted = await post.findById(req.params.id);
+exports.modifyPost = async (req, res, next) => {
+  const postTargeted = await Post.findById(req.params.id);
   let postUpdate = {}; //Contiendra le corp de requète
   const invalidUser = postTargeted.userId != req.auth.userId;
   //si tentative de modification de la post d'un autre user:
@@ -87,7 +85,7 @@ exports.modifypost = async (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
-exports.deletepost = (req, res, next) => {
+exports.deletePost = (req, res, next) => {
   //Ciblage de la post à modifier avec l'id présent dans l'url.
   post.findOne({ _id: req.params.id }).then((post) => {
     //Test si la requète ne provient pas du propriétaire de la post.
@@ -114,7 +112,7 @@ exports.deletepost = (req, res, next) => {
   });
 };
 
-exports.likepost = (req, res, next) => {
+exports.likePost = (req, res, next) => {
   post.findById(req.params.id)
     .then((post) => {
       // Suppression de l'userId si déja présent dans les tableaux: usersLiked et usersDisliked
