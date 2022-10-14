@@ -26,20 +26,23 @@ exports.getPost = (req, res, next) => {
 };
 
 exports.createPost = (req, res, next) => {
-  let postObject = req.body;
+  let newPost = req.body;
   //Suppression de l'userId reçu du client par sécurité
-  delete postObject._id;
-  let imageRef="";//préparation d'une varaible si post d'image
-    if (req.file) {
-      imageRef=`${req.protocol}://${req.get("host")}/images/${req.file.filename}`}
-    const post = new Post({
-      ...postObject,
-      //Récupération de l'userId dans le jeton d'authorization (req.auth)
-      author: req.auth.userId,
-      //Construction de l'URL pour stocker l'image dans le dossier pointé par le middlewear multer-conf.js
-      imageUrl: imageRef
-    });
-    post
+  delete newPost._id;
+  let imageRef = ""; //préparation d'une varaible si post d'image
+  if (req.file) {
+    imageRef = `${req.protocol}://${req.get("host")}/images/${
+      req.file.filename
+    }`;
+  }
+  const post = new Post({
+    ...newPost,
+    //Récupération de l'userId dans le jeton d'authorization (req.auth)
+    author: req.auth.userId,
+    //Construction de l'URL pour stocker l'image dans le dossier pointé par le middlewear multer-conf.js
+    imageUrl: imageRef,
+  });
+  post
     .save()
     .then(() => res.status(201).json({ message: "Publication postée !" }))
     .catch((error) => res.status(400).json({ message: error }));
@@ -47,36 +50,35 @@ exports.createPost = (req, res, next) => {
 
 exports.modifyPost = async (req, res, next) => {
   const postTargeted = await Post.findById(req.params.id);
-  let postUpdate = {}; //Contiendra le corp de requète
-  const invalidUser = postTargeted.author != req.auth.userId;
-  //si tentative de modification de la post d'un autre user:
+  let postUpdate = {};
+  const invalidUser = postTargeted.author !== req.auth.userId;
   if (invalidUser) {
     res.status(403).json({ message: "Non-autorisé !" });
   } else {
     //Test si la requète contient un fichier form/data (= stringifié par multer):
     if (req.file) {
-      //Parser la requète
-      postUpdate = { ...JSON.parse(req.body.post) };
-      //supression de l'ancienne image.
-      let oldPic = postTargeted.imageUrl.split("/images/")[1];
-      fs.unlinkSync(`images/${oldPic}`);
-      //mise à jour de l'URL de la nouvelle image
-      postUpdate.imageUrl = `${req.protocol}://${req.get("host")}/images/${
-        req.file.filename
-      }`;
+      if(postTargeted.imageUrl!== "")
+      {//supression de l'ancienne image si presente dans le post à mettre à jour
+      let oldPic =await postTargeted.imageUrl.split("/images/")[1];
+      fs.unlinkSync(`images/${oldPic}`);}
+      //mise à jour de l'image
+      postUpdate = {
+        ...req.body,
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
+        author:req.auth.userId
+      };
     } else {
-      postUpdate = { ...req.body };
+      postUpdate = { ...req.body,author:req.auth.userId };
     }
+    Post.updateOne(
+      { _id: req.params.id },
+      { ...postUpdate, _id: req.params.id } //réécrire l'_id présent dans l'url pour le cas ou un autre _id serait inséré dans le body..
+    )
+      .then(res.status(200).json({ message: "post mise à jour !" }))
+      .catch((error) => res.status(400).json({ error }));
   }
-
-  delete postUpdate.userId; //Ne pas faire confiance à l'userId de la requète !
-  //Sauvegarde de la mise à jour dans la base de données:
-  Post.updateOne(
-    { _id: req.params.id },
-    { ...postUpdate, _id: req.params.id } //réécrire l'_id présent dans l'url pour le cas ou un autre _id serait inséré dans le body..
-  )
-    .then(res.status(200).json({ message: "post mise à jour !" }))
-    .catch((error) => res.status(400).json({ error }));
 };
 
 exports.likePost = (req, res, next) => {
