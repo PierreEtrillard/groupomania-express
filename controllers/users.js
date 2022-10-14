@@ -8,6 +8,7 @@ dotenv.config();
 const tokenKey = process.env.TOKEN_KEY;
 
 exports.createUser = (req, res, next) => {
+  console.log(req.body);
   if (
     validator.isEmail(req.body.email) 
   ) {
@@ -15,8 +16,13 @@ exports.createUser = (req, res, next) => {
     bcrypt
       .hash(req.body.password, 10)
       .then((hash) => {
-        const user = new User({name:req.body.name, email: req.body.email, password: hash });
-        user
+        const newUser = new User({
+          name:req.body.email,
+          email: req.body.email,
+          password: hash,
+          photo:"../images/standart-profil-photo.webp",
+          role: "normal"});
+        newUser
           .save()
           .then(() => res.status(201).json({ message: "Compte créé !" }))
           .catch((error) => res.status(500).json({ error }));
@@ -25,7 +31,7 @@ exports.createUser = (req, res, next) => {
     res
       .status(400)
       .send(
-        "renseignez un mail valide et un mot de passe fort: 8 à 20 caractères et contenant minimum une majuscule, une minuscule, un chiffre et caractère spéciale "
+        "renseignez un mail valide"
       );
   }
 };
@@ -52,7 +58,7 @@ exports.login = (req, res, next) => {
             message: "Vous êtes connectez",
             userId: user._id,
             token: tokenManager.sign({ userId: user._id }, tokenKey, {
-              expiresIn: "3h",
+              expiresIn: "30d",
             }),
           });
         })
@@ -60,3 +66,48 @@ exports.login = (req, res, next) => {
     })
     .catch((error) => res.status(501).json({ error }));
 };
+exports.getUser = (req, res, next) => {
+  User.findOne({ _id: req.params.id })
+    .then((user) => {
+      res.status(200).json(user);
+    })
+    .catch((error) => {
+      res.status(400).json({
+        error: error,
+      });
+    });
+};
+
+exports.profilUpdater = async (req, res, next) => {
+  const userTargeted = await User.findById(req.params.id);
+  let userUpdate = {}; //Contiendra le corp de requète
+  const invalidUser = userTargeted.id != req.auth.userId;
+  //si tentative de modification de la post d'un autre user:
+  console.log(req.body);
+  if (invalidUser) {
+    res.status(403).json({ message: "Non-autorisé !" });
+  } else {
+    //Test si la requète contient un fichier form/data (= stringifié par multer):
+    if (req.file) {
+      //Parser la requète
+      userUpdate = { ...JSON.parse(req.body.user) };
+      //supression de l'ancienne image.
+      let oldPic = userTargeted.photo.split("/images/")[1];
+      fs.unlinkSync(`images/${oldPic}`);
+      //mise à jour de l'URL de la nouvelle image
+      userUpdate.photo = `${req.protocol}://${req.get("host")}/images/${
+        req.file.filename
+      }`;
+    } else {
+      userUpdate = { ...req.body };
+    }
+  }
+  delete userUpdate.id; //Ne pas faire confiance à l'userId de la requète !
+  //Sauvegarde de la mise à jour dans la base de données:
+  User.updateOne(
+    { _id: req.params.id },
+    { ...userUpdate, _id: req.params.id } //réécrire l'_id présent dans l'url pour le cas ou un autre _id serait inséré dans le body..
+  )
+    .then(res.status(200).json({ message: "profil mise à jour !" }))
+    .catch((error) => res.status(400).json({ error }));
+  };
