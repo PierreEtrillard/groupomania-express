@@ -8,8 +8,8 @@ const postEntity = mongoose.Schema({
   imageUrl: { type: String },
   author: { type: String ,required: true},
   usersLikers: { type: Array },
+  comment:{type:Array}
 });
 postEntity.plugin(mongoErrorHandler);
-
-
 module.exports = mongoose.model("Post", postEntity);
+

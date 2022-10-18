@@ -3,11 +3,12 @@ const uniqueValidator = require("mongoose-unique-validator");
 const mongoErrorHandler = require("mongoose-mongodb-errors");
 
 const userEntity = mongoose.Schema({
-  name:{type:String},
+  name: { type: String },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  role: { type: String, required: true },
   photo: { type: String },
-  myHobbies:{type:String},
+  myHobbies: { type: String },
   mylikes: { type: Array },
   myEvents: { type: Array },
 });

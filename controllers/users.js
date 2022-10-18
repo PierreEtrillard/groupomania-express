@@ -1,38 +1,37 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/users");
 const tokenManager = require("jsonwebtoken");
+const fs = require("fs");
 const validator = require("validator");
-// récupération de la clef de création de jeton de connection dans le fichier '.env'
+// récupération de la liste des administrateurs et de la clef de création de jeton de connection dans le fichier '.env'
 const dotenv = require("dotenv");
 dotenv.config();
+const admins = process.env.ADMINISTRATORS;
 const tokenKey = process.env.TOKEN_KEY;
 
 exports.createUser = (req, res, next) => {
-  console.log(req.body);
-  if (
-    validator.isEmail(req.body.email) 
-  ) {
+  if (validator.isEmail(req.body.email)) {
+    //évaluation si l'utilisteur est un administrateur
+    let privilege = "";
+    admins.includes(req.body.email)
+      ? (privilege = "gpm-admin")
+      : (privilege = "normal");
     //10 passes de cryptages du mot de passe envoyé
-    bcrypt
-      .hash(req.body.password, 10)
-      .then((hash) => {
-        const newUser = new User({
-          name:req.body.email,
-          email: req.body.email,
-          password: hash,
-          photo:"../images/standart-profil-photo.webp",
-          role: "normal"});
-        newUser
-          .save()
-          .then(() => res.status(201).json({ message: "Compte créé !" }))
-          .catch((error) => res.status(500).json({ error }));
-      })
+    bcrypt.hash(req.body.password, 10).then((hash) => {
+      const newUser = new User({
+        name: req.body.email,
+        email: req.body.email,
+        password: hash,
+        photo: "../images/standart-profil-photo.webp",
+        role: privilege,
+      });
+      newUser
+        .save()
+        .then(() => res.status(201).json({ message: "Compte créé !" }))
+        .catch((error) => res.status(500).json({ error }));
+    });
   } else {
-    res
-      .status(400)
-      .send(
-        "renseignez un mail valide"
-      );
+    res.status(400).send("renseignez un mail valide");
   }
 };
 
@@ -40,9 +39,8 @@ exports.login = (req, res, next) => {
   User.findOne({ email: req.body.email })
     .then((user) => {
       if (!user) {
-
         return res.status(401).json({
-          messsage: "mot de passe ou nom d'utilisateur incorrect" /* ! indiquer 
+          messsage: "Mail ou mot de passe incorrect" /* ! indiquer 
         l'absence de l'user dans la BDD serait une fuite de donnée*/,
         });
       }
@@ -51,21 +49,27 @@ exports.login = (req, res, next) => {
         .then((valid) => {
           if (!valid) {
             return res.status(401).json({
-              messsage: "mot de passe ou nom d'utilisateur incorrect",
+              messsage: "Mail ou mot de passe incorrect",
             });
           }
+          const access_token = tokenManager.sign(
+            { userId: user._id },
+            tokenKey
+          );
+          res.cookie("access_token", access_token, {
+            httpOnly: true,
+            maxAge: 300000000000,
+          });
           res.status(200).json({
-            message: "Vous êtes connectez",
+            message: "Vous êtes connecté",
             userId: user._id,
-            token: tokenManager.sign({ userId: user._id }, tokenKey, {
-              expiresIn: "30d",
-            }),
           });
         })
         .catch((error) => res.status(500).json({ error }));
     })
     .catch((error) => res.status(501).json({ error }));
 };
+
 exports.getUser = (req, res, next) => {
   User.findOne({ _id: req.params.id })
     .then((user) => {
@@ -81,25 +85,27 @@ exports.getUser = (req, res, next) => {
 exports.profilUpdater = async (req, res, next) => {
   const userTargeted = await User.findById(req.params.id);
   let userUpdate = {}; //Contiendra le corp de requète
-  const invalidUser = userTargeted.id != req.auth.userId;
+  const invalidUser = userTargeted.id !== req.auth.userId;
   //si tentative de modification de la post d'un autre user:
-  console.log(req.body);
   if (invalidUser) {
     res.status(403).json({ message: "Non-autorisé !" });
   } else {
     //Test si la requète contient un fichier form/data (= stringifié par multer):
     if (req.file) {
-      //Parser la requète
-      userUpdate = { ...JSON.parse(req.body.user) };
       //supression de l'ancienne image.
       let oldPic = userTargeted.photo.split("/images/")[1];
       fs.unlinkSync(`images/${oldPic}`);
-      //mise à jour de l'URL de la nouvelle image
-      userUpdate.photo = `${req.protocol}://${req.get("host")}/images/${
-        req.file.filename
-      }`;
+
+      userUpdate = {
+        ...req.body,
+        //mise à jour de l'URL de la nouvelle image
+        photo: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
+        role: userTargeted.role,
+      };
     } else {
-      userUpdate = { ...req.body };
+      userUpdate = { ...req.body, role: userTargeted.role };
     }
   }
   delete userUpdate.id; //Ne pas faire confiance à l'userId de la requète !
@@ -110,4 +116,4 @@ exports.profilUpdater = async (req, res, next) => {
   )
     .then(res.status(200).json({ message: "profil mise à jour !" }))
     .catch((error) => res.status(400).json({ error }));
-  };
+};
