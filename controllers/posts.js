@@ -1,4 +1,6 @@
 const Post = require("../models/posts");
+const User = require("../models/users");
+
 const fs = require("fs");
 
 exports.getAllPosts = (req, res, next) => {
@@ -25,9 +27,10 @@ exports.getPost = (req, res, next) => {
     });
 };
 
-exports.createPost = (req, res, next) => {
+exports.createPost = async (req, res, next) => {
   let newPost = req.body;
-  //Suppression de l'userId reçu du client par sécurité
+  const postAuthor = await User.findOne({ _id: req.auth.userId })
+  //Suppression de l'id reçu du client par sécurité
   delete newPost._id;
   let imageRef = ""; //préparation d'une varaible si post d'image
   if (req.file) {
@@ -38,9 +41,10 @@ exports.createPost = (req, res, next) => {
   const post = new Post({
     ...newPost,
     //Récupération de l'userId dans le jeton d'authorization (req.auth)
-    author: req.auth.userId,
+    author: postAuthor.name,
     //Construction de l'URL pour stocker l'image dans le dossier pointé par le middlewear multer-conf.js
     imageUrl: imageRef,
+    createdAt: Date.now(),
   });
   post
     .save()
@@ -57,20 +61,21 @@ exports.modifyPost = async (req, res, next) => {
   } else {
     //Test si la requète contient un fichier form/data (= stringifié par multer):
     if (req.file) {
-      if(postTargeted.imageUrl!== "")
-      {//supression de l'ancienne image si presente dans le post à mettre à jour
-      let oldPic =await postTargeted.imageUrl.split("/images/")[1];
-      fs.unlinkSync(`images/${oldPic}`);}
+      if (postTargeted.imageUrl !== "") {
+        //supression de l'ancienne image si presente dans le post à mettre à jour
+        let oldPic = await postTargeted.imageUrl.split("/images/")[1];
+        fs.unlinkSync(`images/${oldPic}`);
+      }
       //mise à jour de l'image
       postUpdate = {
         ...req.body,
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
           req.file.filename
         }`,
-        author:req.auth.userId
+        author: req.auth.userId,
       };
     } else {
-      postUpdate = { ...req.body,author:req.auth.userId };
+      postUpdate = { ...req.body, author: req.auth.userId };
     }
     Post.updateOne(
       { _id: req.params.id },

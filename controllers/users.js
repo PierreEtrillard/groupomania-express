@@ -69,6 +69,12 @@ exports.login = (req, res, next) => {
     })
     .catch((error) => res.status(501).json({ error }));
 };
+exports.logout = (req, res, next) => {
+  res.clearCookie("access_token", {
+    httpOnly: true,
+  });
+  res.status(200).json({ message: "Vous êtes déconnecté" });
+};
 
 exports.getUser = (req, res, next) => {
   User.findOne({ _id: req.params.id })
