@@ -9,7 +9,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 dotenv.config();
 const mongoPwd = process.env.mongoLogin;
-
+const domain = process.env.DOMAIN_IP_ADRESS
 mongoose
   .connect(mongoPwd, {
     useNewUrlParser: true,
@@ -23,7 +23,7 @@ mongoose
 app.use(express.json());
 app.use(cookieParser());
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+  res.setHeader("Access-Control-Allow-Origin", `${domain}:4200`);
   res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader(
     "Access-Control-Allow-Headers",

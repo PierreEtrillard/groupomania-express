@@ -9,7 +9,7 @@ const userEntity = mongoose.Schema({
   role: { type: String, required: true },
   photo: { type: String },
   myHobbies: { type: String },
-  mylikes: { type: Array },
+  myLikes: { type: Array },
   myEvents: { type: Array },
 });
 

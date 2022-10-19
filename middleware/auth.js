@@ -9,7 +9,7 @@ module.exports = (req, res, next) => {
    const { cookies } = req
     if (!cookies || !cookies.access_token) {
       return res.status(401).json({
-        message: 'Missing token in cookie'
+        message: 'cookie access_token manquant'
       });
     }
     const decodedToken = tokenManager.verify(cookies.access_token, tokenKey);

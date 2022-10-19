@@ -57,8 +57,9 @@ exports.login = (req, res, next) => {
             tokenKey
           );
           res.cookie("access_token", access_token, {
+            path: "/",
             httpOnly: true,
-            maxAge: 300000000000,
+            expireIn: 3000000000000,
           });
           res.status(200).json({
             message: "Vous êtes connecté",
@@ -70,16 +71,35 @@ exports.login = (req, res, next) => {
     .catch((error) => res.status(501).json({ error }));
 };
 exports.logout = (req, res, next) => {
-  res.clearCookie("access_token", {
+  res.cookie("access_token", "",{
+    path: "/",
     httpOnly: true,
+    expireIn:1
   });
   res.status(200).json({ message: "Vous êtes déconnecté" });
 };
 
 exports.getUser = (req, res, next) => {
-  User.findOne({ _id: req.params.id })
+  User.findOne({ _id: req.auth.userId  })
     .then((user) => {
-      res.status(200).json(user);
+      userProfile = user;
+      userProfile.password="";
+      res.status(200).json(userProfile);
+    })
+    .catch((error) => {
+      res.status(400).json({
+        error: error,
+      });
+    });
+};
+exports.getAllUser = (req, res, next) => {
+  User.find()
+    .then((users) => {
+      usersProfile = users;
+      usersProfile.forEach(user => {
+       user.password=""
+      });
+      res.status(200).json(userProfile);
     })
     .catch((error) => {
       res.status(400).json({
@@ -114,11 +134,11 @@ exports.profilUpdater = async (req, res, next) => {
       userUpdate = { ...req.body, role: userTargeted.role };
     }
   }
-  delete userUpdate.id; //Ne pas faire confiance à l'userId de la requète !
+  
   //Sauvegarde de la mise à jour dans la base de données:
   User.updateOne(
     { _id: req.params.id },
-    { ...userUpdate, _id: req.params.id } //réécrire l'_id présent dans l'url pour le cas ou un autre _id serait inséré dans le body..
+    { ...userUpdate, _id: req.auth.userId } //Ne pas faire confiance à l'Id de la requète: réécrire l'_id présent dans le token pour le cas ou un autre _id serait inséré dans le body..
   )
     .then(res.status(200).json({ message: "profil mise à jour !" }))
     .catch((error) => res.status(400).json({ error }));

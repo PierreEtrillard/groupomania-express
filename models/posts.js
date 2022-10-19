@@ -6,8 +6,9 @@ const postEntity = mongoose.Schema({
   createdAt: { type: Date },
   textContent: { type: String },
   imageUrl: { type: String },
-  author: { type: String ,required: true},
-  usersLikers: { type: Array },
+  authorId: { type: String ,required: true},
+  authorName: { type: String ,required: true},
+  likers: { type: Array },
   comment:{type:Array}
 });
 postEntity.plugin(mongoErrorHandler);

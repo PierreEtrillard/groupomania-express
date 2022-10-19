@@ -41,7 +41,8 @@ exports.createPost = async (req, res, next) => {
   const post = new Post({
     ...newPost,
     //Récupération de l'userId dans le jeton d'authorization (req.auth)
-    author: postAuthor.name,
+    authorName: postAuthor.name,
+    authorId: postAuthor.id,
     //Construction de l'URL pour stocker l'image dans le dossier pointé par le middlewear multer-conf.js
     imageUrl: imageRef,
     createdAt: Date.now(),
@@ -72,7 +73,7 @@ exports.modifyPost = async (req, res, next) => {
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
           req.file.filename
         }`,
-        author: req.auth.userId,
+        authorId: req.auth.userId,
       };
     } else {
       postUpdate = { ...req.body, author: req.auth.userId };
@@ -89,15 +90,15 @@ exports.modifyPost = async (req, res, next) => {
 exports.likePost = (req, res, next) => {
   Post.findById(req.params.id)
     .then((post) => {
-      // Suppression de l'userId si déja présent dans les tableaux: usersLiked et usersDisliked
-      const postAuthor = post.author;
-      let likersIds = post.usersLikers.filter(
+      // Suppression de l'userId si déja présent dans le tableau "likers"
+      const postAuthor = post.authorId;
+      let likersIds = post.likers.filter(
         (idList) => idList !== req.auth.userId
       );
       if (req.body.likeIt && req.auth.userId !== postAuthor) {
         likersIds.push(req.auth.userId);
       }
-      post.usersLikers = likersIds;
+      post.likers = likersIds;
       post.save().then(() => {
         res.status(200).json({ message: "appréciation enregistrée" });
       });
