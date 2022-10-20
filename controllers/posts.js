@@ -5,8 +5,38 @@ const fs = require("fs");
 
 exports.getAllPosts = (req, res, next) => {
   Post.find()
-    .then((posts) => {
-      res.status(200).json(posts);
+    .then(async (posts) => {
+      const allPostsToFront =  posts.map( (post) => {
+        let authorDetails =  User.findById(post.authorId)
+        return {
+          id:post.id,
+          title: post.title,
+          author: authorDetails.name,//"valeurs en promise"
+          authorPhoto: "../images/standart-profil-photo.webp",//authorDetails.photo,//"valeurs en promise"
+          textContent: post.textContent,
+          imageUrl: post.imageUrl,
+          createdAt: post.createdAt,
+        }; 
+      });
+
+      // console.log(allPostsToFront);
+      // console.log(allPostsToFront);
+      // let allPostsToFront = [];
+      //  posts.forEach(async (post) => {
+      //     const authorDetails = await User.findById(post.authorId);
+      //     const postToFront = {
+        //       title: post.title,
+        //       author: await authorDetails.name,
+      //       authorPhoto: await authorDetails.photo,
+      //       textContent: post.textContent,
+      //       imageUrl: post.imageUrl,
+      //       createdAt:post.createdAt
+      //     };
+      //     allPostsToFront.push(postToFront);
+      //     console.log(allPostsToFront.length);
+      //   });
+      //   console.log(allPostsToFront);
+      await res.status(200).json(allPostsToFront);
     })
     .catch((error) => {
       res.status(400).json({
@@ -29,7 +59,7 @@ exports.getPost = (req, res, next) => {
 
 exports.createPost = async (req, res, next) => {
   let newPost = req.body;
-  const postAuthor = await User.findOne({ _id: req.auth.userId })
+  const postAuthor = await User.findOne({ _id: req.auth.userId });
   //Suppression de l'id reçu du client par sécurité
   delete newPost._id;
   let imageRef = ""; //préparation d'une varaible si post d'image
@@ -88,6 +118,7 @@ exports.modifyPost = async (req, res, next) => {
 };
 
 exports.likePost = (req, res, next) => {
+  console.log("likeIt? "+ JSON.stringify(req.body));
   Post.findById(req.params.id)
     .then((post) => {
       // Suppression de l'userId si déja présent dans le tableau "likers"
@@ -95,7 +126,7 @@ exports.likePost = (req, res, next) => {
       let likersIds = post.likers.filter(
         (idList) => idList !== req.auth.userId
       );
-      if (req.body.likeIt && req.auth.userId !== postAuthor) {
+      if (req.auth.userId !== postAuthor && req.body.likeIt) {
         likersIds.push(req.auth.userId);
       }
       post.likers = likersIds;

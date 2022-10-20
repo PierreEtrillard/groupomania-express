@@ -62,14 +62,13 @@ exports.login = (req, res, next) => {
             httpOnly: true,
             expires: expiryDate,
           });
+          const userProfile = user;
+          userProfile.password = "not visible";
+          userProfile.lastConnectAt = user.connectAt;
+          userProfile.connectAt = Date.now();
           res.status(200).json({
             message: "Vous êtes connecté",
-            userProfile: {
-              ...user,
-              password: "not visible",
-              lastConnectAt:user.connectAt,
-              connectAt: Date.now(),
-            },
+            userProfile: userProfile
           });
         })
         .catch((error) => res.status(500).json({ error }));
@@ -99,11 +98,11 @@ exports.getUser = (req, res, next) => {
 exports.getAllUser = (req, res, next) => {
   User.find()
     .then((users) => {
-      usersProfile = users;
-      usersProfile.forEach((user) => {
+      const usersProfiles = users;
+      usersProfiles.forEach((user) => {
         user.password = "not visible";
       });
-      res.status(200).json(userProfile);
+      res.status(200).json(usersProfiles);
     })
     .catch((error) => {
       res.status(400).json({
