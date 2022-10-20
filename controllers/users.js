@@ -24,6 +24,7 @@ exports.createUser = (req, res, next) => {
         password: hash,
         photo: "../images/standart-profil-photo.webp",
         role: privilege,
+        connectAt: Date.now(),
       });
       newUser
         .save()
@@ -56,14 +57,19 @@ exports.login = (req, res, next) => {
             { userId: user._id },
             tokenKey
           );
+          const expiryDate = new Date(Date.now() + 60 * 60 * 1000 * 24 * 30);
           res.cookie("access_token", access_token, {
-            path: "/",
             httpOnly: true,
-            expireIn: 3000000000000,
+            expires: expiryDate,
           });
           res.status(200).json({
             message: "Vous êtes connecté",
-            userId: user._id,
+            userProfile: {
+              ...user,
+              password: "not visible",
+              lastConnectAt:user.connectAt,
+              connectAt: Date.now(),
+            },
           });
         })
         .catch((error) => res.status(500).json({ error }));
@@ -71,19 +77,17 @@ exports.login = (req, res, next) => {
     .catch((error) => res.status(501).json({ error }));
 };
 exports.logout = (req, res, next) => {
-  res.cookie("access_token", "",{
-    path: "/",
+  res.clearCookie("access_token", {
     httpOnly: true,
-    expireIn:1
   });
   res.status(200).json({ message: "Vous êtes déconnecté" });
 };
 
 exports.getUser = (req, res, next) => {
-  User.findOne({ _id: req.auth.userId  })
+  User.findOne({ _id: req.auth.userId })
     .then((user) => {
       userProfile = user;
-      userProfile.password="";
+      userProfile.password = "not visible";
       res.status(200).json(userProfile);
     })
     .catch((error) => {
@@ -96,8 +100,8 @@ exports.getAllUser = (req, res, next) => {
   User.find()
     .then((users) => {
       usersProfile = users;
-      usersProfile.forEach(user => {
-       user.password=""
+      usersProfile.forEach((user) => {
+        user.password = "not visible";
       });
       res.status(200).json(userProfile);
     })
@@ -134,7 +138,6 @@ exports.profilUpdater = async (req, res, next) => {
       userUpdate = { ...req.body, role: userTargeted.role };
     }
   }
-  
   //Sauvegarde de la mise à jour dans la base de données:
   User.updateOne(
     { _id: req.params.id },

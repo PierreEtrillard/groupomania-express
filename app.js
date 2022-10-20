@@ -10,6 +10,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 const mongoPwd = process.env.mongoLogin;
 const domain = process.env.DOMAIN_IP_ADRESS
+console.log(domain);
 mongoose
   .connect(mongoPwd, {
     useNewUrlParser: true,
