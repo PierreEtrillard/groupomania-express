@@ -6,37 +6,22 @@ const fs = require("fs");
 exports.getAllPosts = (req, res, next) => {
   Post.find()
     .then(async (posts) => {
-      const allPostsToFront =  posts.map( (post) => {
-        let authorDetails =  User.findById(post.authorId)
+      const allPostsToFront = posts.map(async (post) => {
+        let authorDetails = await User.findById(post.authorId);
         return {
-          id:post.id,
+          id: post.id,
           title: post.title,
-          author: authorDetails.name,//"valeurs en promise"
-          authorPhoto: "../images/standart-profil-photo.webp",//authorDetails.photo,//"valeurs en promise"
+          author: await authorDetails.name,
+          authorPhoto: await authorDetails.photo,
           textContent: post.textContent,
+          likers:post.likers,
           imageUrl: post.imageUrl,
           createdAt: post.createdAt,
-        }; 
+        };
       });
-
-      // console.log(allPostsToFront);
-      // console.log(allPostsToFront);
-      // let allPostsToFront = [];
-      //  posts.forEach(async (post) => {
-      //     const authorDetails = await User.findById(post.authorId);
-      //     const postToFront = {
-        //       title: post.title,
-        //       author: await authorDetails.name,
-      //       authorPhoto: await authorDetails.photo,
-      //       textContent: post.textContent,
-      //       imageUrl: post.imageUrl,
-      //       createdAt:post.createdAt
-      //     };
-      //     allPostsToFront.push(postToFront);
-      //     console.log(allPostsToFront.length);
-      //   });
-      //   console.log(allPostsToFront);
-      await res.status(200).json(allPostsToFront);
+      Promise.all(allPostsToFront).then((arrayOfPosts) =>
+        res.status(200).json(arrayOfPosts)
+      );
     })
     .catch((error) => {
       res.status(400).json({
@@ -71,8 +56,8 @@ exports.createPost = async (req, res, next) => {
   const post = new Post({
     ...newPost,
     //Récupération de l'userId dans le jeton d'authorization (req.auth)
+    authorId: req.auth.userId,
     authorName: postAuthor.name,
-    authorId: postAuthor.id,
     //Construction de l'URL pour stocker l'image dans le dossier pointé par le middlewear multer-conf.js
     imageUrl: imageRef,
     createdAt: Date.now(),
@@ -118,7 +103,7 @@ exports.modifyPost = async (req, res, next) => {
 };
 
 exports.likePost = (req, res, next) => {
-  console.log("likeIt? "+ JSON.stringify(req.body));
+  console.log("likeIt? " + JSON.stringify(req.body));
   Post.findById(req.params.id)
     .then((post) => {
       // Suppression de l'userId si déja présent dans le tableau "likers"

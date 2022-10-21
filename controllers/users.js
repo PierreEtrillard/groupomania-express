@@ -8,6 +8,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 const admins = process.env.ADMINISTRATORS;
 const tokenKey = process.env.TOKEN_KEY;
+const domain = process.env.DOMAIN_IP_ADRESS
+const port = process.env.PORT
 
 exports.createUser = (req, res, next) => {
   if (validator.isEmail(req.body.email)) {
@@ -22,7 +24,7 @@ exports.createUser = (req, res, next) => {
         name: req.body.email,
         email: req.body.email,
         password: hash,
-        photo: "../images/standart-profil-photo.webp",
+        photo: `${domain}:${port}/images/standart-profil-photo.webp`,
         role: privilege,
         connectAt: Date.now(),
       });
