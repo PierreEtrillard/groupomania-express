@@ -8,8 +8,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 const admins = process.env.ADMINISTRATORS;
 const tokenKey = process.env.TOKEN_KEY;
-const domain = process.env.DOMAIN_IP_ADRESS
-const port = process.env.PORT
+const domain = process.env.DOMAIN_IP_ADRESS;
+const port = process.env.PORT;
 
 exports.createUser = (req, res, next) => {
   if (validator.isEmail(req.body.email)) {
@@ -26,11 +26,13 @@ exports.createUser = (req, res, next) => {
         password: hash,
         photo: `${domain}:${port}/images/standart-profil-photo.webp`,
         role: privilege,
+        myHobbies:["","","",""],
         connectAt: Date.now(),
       });
       newUser
         .save()
-        .then(() => res.status(201).json({ message: "Compte créé !" }))
+        .then(() => res.status(201).json({ message: "Compte créé !" ,
+        userProfile:newUser}))
         .catch((error) => res.status(500).json({ error }));
     });
   } else {
@@ -59,18 +61,23 @@ exports.login = (req, res, next) => {
             { userId: user._id },
             tokenKey
           );
-          const expiryDate = new Date(Date.now() + 60 * 60 * 1000 * 24 * 30);
+          const expiryDate = new Date(Date.now() + 24 * 30 * 60 * 60 * 1000);
           res.cookie("access_token", access_token, {
             httpOnly: true,
             expires: expiryDate,
           });
-          const userProfile = user;
-          userProfile.password = "not visible";
-          userProfile.lastConnectAt = user.connectAt;
-          userProfile.connectAt = Date.now();
+          const userProfile = {
+            name:user.name,
+            photo:user.photo,
+            lastConnectAt: user.connectAt,
+            connectAt: Date.now(),
+            myLikes:user.myLikes,
+            myHobbies:user.myHobbies,
+            myEvents:user.myEvents
+          };
           res.status(200).json({
             message: "Vous êtes connecté",
-            userProfile: userProfile
+            userProfile: userProfile,
           });
         })
         .catch((error) => res.status(500).json({ error }));

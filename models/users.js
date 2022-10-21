@@ -9,7 +9,7 @@ const userEntity = mongoose.Schema({
   role: { type: String, required: true },
   connectAT:{type:Date},
   photo: { type: String },
-  myHobbies: { type: String },
+  myHobbies: { type: Array },
   myLikes: { type: Array },
   myEvents: { type: Array },
 });
