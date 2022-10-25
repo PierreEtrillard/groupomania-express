@@ -14,7 +14,7 @@ exports.getAllPosts = (req, res, next) => {
           author: await authorDetails.name,
           authorPhoto: await authorDetails.photo,
           textContent: post.textContent,
-          likers:post.likers,
+          likers: post.likers,
           imageUrl: post.imageUrl,
           createdAt: post.createdAt,
         };
@@ -102,28 +102,37 @@ exports.modifyPost = async (req, res, next) => {
   }
 };
 
-exports.likePost = (req, res, next) => {
-  console.log("likeIt? " + JSON.stringify(req.body));
-  Post.findById(req.params.id)
-    .then((post) => {
-      // Suppression de l'userId si déja présent dans le tableau "likers"
-      const postAuthor = post.authorId;
-      let likersIds = post.likers.filter(
-        (idList) => idList !== req.auth.userId
-      );
-      if (req.auth.userId !== postAuthor && req.body.likeIt) {
-        likersIds.push(req.auth.userId);
-      }
-      post.likers = likersIds;
-      post.save().then(() => {
-        res.status(200).json({ message: "appréciation enregistrée" });
-      });
-    })
-    .catch((error) => {
-      res.status(400).json({
-        error,
-      });
-    });
+exports.likePost = async (req, res, next) => {
+  const findPostToLike = Post.findById(req.params.id);
+  const findLikeAuthor = User.findById(req.auth.userId);
+  console.log(req.auth.userId);
+  Promise.all([findPostToLike, findLikeAuthor]).then((datas) => {
+    let postToLike = datas[0];
+    let likeAuthor = datas[1];
+    //filtrage garantissant l'unicité ou la suppression du like
+    let thisPostLikers = postToLike.likers.filter(
+      (likerId) => likerId !== likeAuthor.id
+    );
+    let likeAuthorFavories = likeAuthor.myLikes.filter(
+      (postId) => postId !== postToLike.id
+    );
+    console.log("postToLike.likers sans like: " + postToLike.likers.length);
+    console.log("thisPostLikers a utiliser pour l'update sans like: " + thisPostLikers.length);
+   
+    if (likeAuthor.id !== postToLike.authorId && req.body.likeIt) {
+      //l'autheur du post ne peut liker sont propre post
+      thisPostLikers.push(likeAuthor.id);
+      postToLike.likers = thisPostLikers;
+      console.log("postToLike.likers si liKeIt: " + postToLike.likers.length);
+      console.log("thisPostLikers a utiliser pour l'update si liKeIt: " + thisPostLikers.length);
+      likeAuthorFavories.push(postToLike.id);
+      likeAuthor.myLikes = likeAuthorFavories;
+    }
+    Post.updateOne({ _id: postToLike.id }, { likers: thisPostLikers });
+    User.updateOne({ _id: likeAuthor.id }, { myLikes: likeAuthorFavories })
+      .then(res.status(200).json({ message: "appréciation enregistrée" }))
+      .catch((error) => res.status(400).json({ error }));
+  });
 };
 exports.deletePost = (req, res, next) => {
   //Ciblage de la post à modifier avec l'id présent dans l'url.
