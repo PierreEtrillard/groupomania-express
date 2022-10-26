@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
     const name = file.originalname.split(' ').join('_');
     //récupère le type MIME du fichier
     const extension = MIME_TYPES[file.mimetype];
-    //construit le nouveau nom : "sans_espaceDate.type"
+    //construit le nouveau nom : "sans_espace+date+type"
     callback(null, name + Date.now() + '.' + extension);
   }
 });

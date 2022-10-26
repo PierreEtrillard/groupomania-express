@@ -3,7 +3,7 @@ const mongoErrorHandler = require('mongoose-mongodb-errors');
 
 const postEntity = mongoose.Schema({
   title: { type: String ,required: true},
-  createdAt: { type: Date },
+  createdAt: { type: Number},
   textContent: { type: String },
   imageUrl: { type: String },
   authorId: { type: String ,required: true},

@@ -47,7 +47,7 @@ exports.createPost = async (req, res, next) => {
   const postAuthor = await User.findOne({ _id: req.auth.userId });
   //Suppression de l'id reçu du client par sécurité
   delete newPost._id;
-  let imageRef = ""; //préparation d'une varaible si post d'image
+  let imageRef = ""; //préparation d'une variable si post d'image
   if (req.file) {
     imageRef = `${req.protocol}://${req.get("host")}/images/${
       req.file.filename

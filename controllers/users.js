@@ -26,8 +26,8 @@ exports.createUser = (req, res, next) => {
         password: hash,
         photo: `${domain}:${port}/images/standart-profil-photo.webp`,
         role: privilege,
-        myHobbies:["","","",""],
         connectAt: Date.now(),
+        lastConnectAt: 000,
       });
       newUser
         .save()
@@ -72,22 +72,20 @@ exports.login = (req, res, next) => {
             lastConnectAt: user.connectAt,
             connectAt: Date.now(),
             myLikes:user.myLikes,
-            myHobbies:user.myHobbies,
-            myEvents:user.myEvents
           };
-          res.status(200).json({
+          User.updateOne({_id:user._id },userProfile).then(res.status(200).json({
             message: "Vous êtes connecté",
             userProfile: userProfile,
-          });
+          }))      
+
         })
         .catch((error) => res.status(500).json({ error }));
     })
     .catch((error) => res.status(501).json({ error }));
 };
+
 exports.logout = (req, res, next) => {
-  res.clearCookie("access_token", {
-    httpOnly: true,
-  });
+  res.cookie("access_token",null);
   res.status(200).json({ message: "Vous êtes déconnecté" });
 };
 
