@@ -27,12 +27,12 @@ exports.createUser = (req, res, next) => {
         photo: `${domain}:${port}/images/standart-profil-photo.webp`,
         role: privilege,
         connectAt: Date.now(),
-        lastConnectAt: 000,
+        lastConnectAt: 0,
+        myLikes:[]
       });
       newUser
         .save()
         .then((userRegistred) => {
-          console.log("userId:"+ userRegistred._id);
           const access_token = tokenManager.sign(
             { userId: userRegistred._id },
             tokenKey
@@ -44,7 +44,13 @@ exports.createUser = (req, res, next) => {
               expires: expiryDate,
             })
             .status(201)
-            .json({ message: "Compte créé !", userProfile: newUser });
+            .json({ message: "Compte créé !", userProfile: {
+              name: newUser.name,
+              photo: newUser.photo,
+              role: newUser.role,
+              connectAt: Date.now(),
+              lastConnectAt: 0,
+              myLikes: newUser.myLikes,} });
         })
         .catch((error) => res.status(500).json({ error }));
     });
@@ -82,8 +88,9 @@ exports.login = (req, res, next) => {
           const userProfile = {
             name: user.name,
             photo: user.photo,
-            lastConnectAt: user.connectAt,
+            role: user.role,
             connectAt: Date.now(),
+            lastConnectAt: user.connectAt,
             myLikes: user.myLikes,
           };
           User.updateOne({ _id: user._id }, userProfile).then(
