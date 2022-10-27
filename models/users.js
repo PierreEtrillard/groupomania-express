@@ -10,9 +10,7 @@ const userEntity = mongoose.Schema({
   connectAt:{type:Number},
   lastConnectAt:{type:Number},
   photo: { type: String },
-  myHobbies: { type: Array },
   myLikes: { type: Array },
-  myEvents: { type: Array },
 });
 
 userEntity.plugin(uniqueValidator);

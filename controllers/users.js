@@ -31,8 +31,21 @@ exports.createUser = (req, res, next) => {
       });
       newUser
         .save()
-        .then(() => res.status(201).json({ message: "Compte créé !" ,
-        userProfile:newUser}))
+        .then((userRegistred) => {
+          console.log("userId:"+ userRegistred._id);
+          const access_token = tokenManager.sign(
+            { userId: userRegistred._id },
+            tokenKey
+          );
+          const expiryDate = new Date(Date.now() + 24 * 30 * 60 * 60 * 1000);
+          res
+            .cookie("access_token", access_token, {
+              httpOnly: true,
+              expires: expiryDate,
+            })
+            .status(201)
+            .json({ message: "Compte créé !", userProfile: newUser });
+        })
         .catch((error) => res.status(500).json({ error }));
     });
   } else {
@@ -67,17 +80,18 @@ exports.login = (req, res, next) => {
             expires: expiryDate,
           });
           const userProfile = {
-            name:user.name,
-            photo:user.photo,
+            name: user.name,
+            photo: user.photo,
             lastConnectAt: user.connectAt,
             connectAt: Date.now(),
-            myLikes:user.myLikes,
+            myLikes: user.myLikes,
           };
-          User.updateOne({_id:user._id },userProfile).then(res.status(200).json({
-            message: "Vous êtes connecté",
-            userProfile: userProfile,
-          }))      
-
+          User.updateOne({ _id: user._id }, userProfile).then(
+            res.status(200).json({
+              message: "Vous êtes connecté",
+              userProfile: userProfile,
+            })
+          );
         })
         .catch((error) => res.status(500).json({ error }));
     })
@@ -85,7 +99,7 @@ exports.login = (req, res, next) => {
 };
 
 exports.logout = (req, res, next) => {
-  res.cookie("access_token",null);
+  res.clearCookie("access_token", { httpOnly: true });
   res.status(200).json({ message: "Vous êtes déconnecté" });
 };
 

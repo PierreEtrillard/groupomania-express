@@ -43,8 +43,9 @@ exports.getPost = (req, res, next) => {
 };
 
 exports.createPost = async (req, res, next) => {
+  console.log(req.auth.userId);
   let newPost = req.body;
-  const postAuthor = await User.findOne({ _id: req.auth.userId });
+  // const postAuthor = await User.findById(req.auth.userId);
   //Suppression de l'id reçu du client par sécurité
   delete newPost._id;
   let imageRef = ""; //préparation d'une variable si post d'image
@@ -57,14 +58,14 @@ exports.createPost = async (req, res, next) => {
     ...newPost,
     //Récupération de l'userId dans le jeton d'authorization (req.auth)
     authorId: req.auth.userId,
-    authorName: postAuthor.name,
+    // authorName: postAuthor.name,
     //Construction de l'URL pour stocker l'image dans le dossier pointé par le middlewear multer-conf.js
     imageUrl: imageRef,
     createdAt: Date.now(),
   });
   post
     .save()
-    .then(() => res.status(201).json({ message: "Publication postée !" }))
+    .then(() => res.status(201).json({ message: "Publication postée !",post:post }))
     .catch((error) => res.status(400).json({ message: error }));
 };
 
@@ -103,9 +104,9 @@ exports.modifyPost = async (req, res, next) => {
 };
 
 exports.likePost = async (req, res, next) => {
+  console.log("liker userId = "+ req.auth.userId);
   const findPostToLike = Post.findById(req.params.id);
   const findLikeAuthor = User.findById(req.auth.userId);
-  console.log(req.auth.userId);
   Promise.all([findPostToLike, findLikeAuthor]).then((datas) => {
     let postToLike = datas[0];
     let likeAuthor = datas[1];
