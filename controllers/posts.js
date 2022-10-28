@@ -43,9 +43,7 @@ exports.getPost = (req, res, next) => {
 };
 
 exports.createPost = async (req, res, next) => {
-  console.log(req.auth.userId);
   let newPost = req.body;
-  // const postAuthor = await User.findById(req.auth.userId);
   //Suppression de l'id reçu du client par sécurité
   delete newPost._id;
   let imageRef = ""; //préparation d'une variable si post d'image
@@ -129,8 +127,9 @@ exports.likePost = async (req, res, next) => {
       likeAuthorFavories.push(postToLike.id);
       likeAuthor.myLikes = likeAuthorFavories;
     }
-    Post.updateOne({ _id: postToLike.id }, { likers: thisPostLikers });
-    User.updateOne({ _id: likeAuthor.id }, { myLikes: likeAuthorFavories })
+    const promisePostLikersUpdate = Post.updateOne({ _id: postToLike.id }, { likers: thisPostLikers });
+    const promiseUsersLikesUpdate = User.updateOne({ _id: likeAuthor.id }, { myLikes: likeAuthorFavories });
+    Promise.all([promisePostLikersUpdate,promiseUsersLikesUpdate])
       .then(res.status(200).json({ message: "appréciation enregistrée" }))
       .catch((error) => res.status(400).json({ error }));
   });

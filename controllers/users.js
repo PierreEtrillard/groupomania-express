@@ -28,7 +28,7 @@ exports.createUser = (req, res, next) => {
         role: privilege,
         connectAt: Date.now(),
         lastConnectAt: 0,
-        myLikes:[]
+        myLikes: [],
       });
       newUser
         .save()
@@ -44,13 +44,18 @@ exports.createUser = (req, res, next) => {
               expires: expiryDate,
             })
             .status(201)
-            .json({ message: "Compte créé !", userProfile: {
-              name: newUser.name,
-              photo: newUser.photo,
-              role: newUser.role,
-              connectAt: Date.now(),
-              lastConnectAt: 0,
-              myLikes: newUser.myLikes,} });
+            .json({
+              message: "Compte créé !",
+              userProfile: {
+                email: newUser.email,
+                name: newUser.name,
+                photo: newUser.photo,
+                role: newUser.role,
+                connectAt: Date.now(),
+                lastConnectAt: 0,
+                myLikes: newUser.myLikes,
+              },
+            });
         })
         .catch((error) => res.status(500).json({ error }));
     });
@@ -86,6 +91,7 @@ exports.login = (req, res, next) => {
             expires: expiryDate,
           });
           const userProfile = {
+            email: user.email,
             name: user.name,
             photo: user.photo,
             role: user.role,
@@ -140,35 +146,30 @@ exports.getAllUser = (req, res, next) => {
 };
 
 exports.profilUpdater = async (req, res, next) => {
-  const userTargeted = await User.findById(req.params.id);
-  let userUpdate = {}; //Contiendra le corp de requète
-  const invalidUser = userTargeted.id !== req.auth.userId;
-  //si tentative de modification de la post d'un autre user:
-  if (invalidUser) {
-    res.status(403).json({ message: "Non-autorisé !" });
-  } else {
-    //Test si la requète contient un fichier form/data (= stringifié par multer):
-    if (req.file) {
-      //supression de l'ancienne image.
-      let oldPic = userTargeted.photo.split("/images/")[1];
-      fs.unlinkSync(`images/${oldPic}`);
+  const userTargeted = await User.findById(req.auth.userId);
+  // console.log(req.body);
 
-      userUpdate = {
-        ...req.body,
-        //mise à jour de l'URL de la nouvelle image
-        photo: `${req.protocol}://${req.get("host")}/images/${
-          req.file.filename
-        }`,
-        role: userTargeted.role,
-      };
-    } else {
-      userUpdate = { ...req.body, role: userTargeted.role };
+  let userUpdate = {}; //Contiendra le corp de requète
+  let photo = ""; //préparation d'une variable si post d'une photo de profile
+  if (req.file) {
+    //suppression de l'ancienne photo si ce n'est pas la photo par defaut)
+    if (
+      userTargeted.photo !==
+      `${domain}:${port}/images/standart-profil-photo.webp`
+    ) {
+      let oldPhoto = userTargeted.photo.split("/images/")[1];
+      fs.unlinkSync(`images/${oldPhoto}`);
     }
+    photo = `${req.protocol}://${req.get("host")}/images/${req.file.filename}`;
+    userUpdate.photo = photo
   }
+  userUpdate.name=req.body.name
+  userUpdate.email=req.body.email
+  console.log(userUpdate);
   //Sauvegarde de la mise à jour dans la base de données:
   User.updateOne(
-    { _id: req.params.id },
-    { ...userUpdate, _id: req.auth.userId } //Ne pas faire confiance à l'Id de la requète: réécrire l'_id présent dans le token pour le cas ou un autre _id serait inséré dans le body..
+    { _id: req.auth.userId },
+    { ...userUpdate,_id: req.auth.userId } //Ne pas faire confiance à l'Id de la requète: réécrire l'_id présent dans le token pour le cas ou un autre _id serait inséré dans le body..
   )
     .then(res.status(200).json({ message: "profil mise à jour !" }))
     .catch((error) => res.status(400).json({ error }));
