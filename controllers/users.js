@@ -147,8 +147,6 @@ exports.getAllUser = (req, res, next) => {
 
 exports.profilUpdater = async (req, res, next) => {
   const userTargeted = await User.findById(req.auth.userId);
-  // console.log(req.body);
-
   let userUpdate = {}; //Contiendra le corp de requète
   let photo = ""; //préparation d'une variable si post d'une photo de profile
   if (req.file) {
@@ -165,12 +163,11 @@ exports.profilUpdater = async (req, res, next) => {
   }
   userUpdate.name=req.body.name
   userUpdate.email=req.body.email
-  console.log(userUpdate);
   //Sauvegarde de la mise à jour dans la base de données:
   User.updateOne(
     { _id: req.auth.userId },
     { ...userUpdate,_id: req.auth.userId } //Ne pas faire confiance à l'Id de la requète: réécrire l'_id présent dans le token pour le cas ou un autre _id serait inséré dans le body..
   )
-    .then(res.status(200).json({ message: "profil mise à jour !" }))
+    .then(res.status(200).json({ message: "profil mise à jour !",userProfile: userUpdate }))
     .catch((error) => res.status(400).json({ error }));
 };

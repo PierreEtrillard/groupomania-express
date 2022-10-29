@@ -134,30 +134,32 @@ exports.likePost = async (req, res, next) => {
       .catch((error) => res.status(400).json({ error }));
   });
 };
-exports.deletePost = (req, res, next) => {
+exports.deletePost = async (req, res, next) => {
   //Ciblage de la post à modifier avec l'id présent dans l'url.
-  Post.findOne({ _id: req.params.id }).then((post) => {
-    //Test si la requète ne provient pas du propriétaire de la post.
-    if (post.userId != req.auth.userId) {
-      res.status(401).json({ message: "Non-autorisé !" });
-    } //Si la requète provient bien du propriétaire: récupération du nom du fichier,
-    else {
-      const filename = post.imageUrl.split("/images/")[1];
-      //supression du fichier image,
-      fs.unlink(
-        `images/${filename}`,
-        //puis suppression définitive de l'objet/post dans la BDD.
-        () => {
-          post
-            .deleteOne({ _id: req.params.id })
-            .then(() => {
-              res.status(200).json({ message: "post supprimée" });
-            })
-            .catch((error) => {
-              res.status(400).json({ error });
-            });
-        }
-      );
+  const eraser = await User.findById(req.auth.userId)
+  console.log(eraser.name);
+  Post.findById( req.params.id).then((post) => {
+    //Test si la requète ne provient pas du propriétaire du post.
+    if (post.authorId === req.auth.userId || eraser.role ==='gpm-admin') {
+       //récupération du nom du fichier,
+       const filename = post.imageUrl.split("/images/")[1];
+       //supression du fichier image,
+       fs.unlink(
+         `images/${filename}`,
+         //puis suppression définitive de l'objet/post dans la BDD.
+         () => {
+           post
+             .deleteOne({ _id: req.params.id })
+             .then(() => {
+               res.status(200).json({ message: "post supprimée" });
+             })
+             .catch((error) => {
+               res.status(400).json({ error });
+             });
+         }
+       );    
+    }
+    else {  res.status(401).json({ message: "Non-autorisé !" });
     }
   });
 };
