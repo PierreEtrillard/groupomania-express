@@ -63,14 +63,17 @@ exports.createPost = async (req, res, next) => {
   });
   post
     .save()
-    .then(() => res.status(201).json({ message: "Publication postée !",post:post }))
+    .then(() =>
+      res.status(201).json({ message: "Publication postée !", post: post })
+    )
     .catch((error) => res.status(400).json({ message: error }));
 };
 
 exports.modifyPost = async (req, res, next) => {
   const postTargeted = await Post.findById(req.params.id);
   let postUpdate = {};
-  const invalidUser = postTargeted.author !== req.auth.userId;
+  let imageUrl = "";
+  const invalidUser = postTargeted.authorId !== req.auth.userId;
   if (invalidUser) {
     res.status(403).json({ message: "Non-autorisé !" });
   } else {
@@ -88,10 +91,12 @@ exports.modifyPost = async (req, res, next) => {
           req.file.filename
         }`,
         authorId: req.auth.userId,
-      };
+      }
+      console.log(postUpdate);;
     } else {
-      postUpdate = { ...req.body, author: req.auth.userId };
+      postUpdate = { ...req.body, authorId: req.auth.userId };
     }
+    
     Post.updateOne(
       { _id: req.params.id },
       { ...postUpdate, _id: req.params.id } //réécrire l'_id présent dans l'url pour le cas ou un autre _id serait inséré dans le body..
@@ -102,7 +107,7 @@ exports.modifyPost = async (req, res, next) => {
 };
 
 exports.likePost = async (req, res, next) => {
-  console.log("liker userId = "+ req.auth.userId);
+  console.log("liker userId = " + req.auth.userId);
   const findPostToLike = Post.findById(req.params.id);
   const findLikeAuthor = User.findById(req.auth.userId);
   Promise.all([findPostToLike, findLikeAuthor]).then((datas) => {
@@ -115,51 +120,52 @@ exports.likePost = async (req, res, next) => {
     let likeAuthorFavories = likeAuthor.myLikes.filter(
       (postId) => postId !== postToLike.id
     );
-    console.log("postToLike.likers sans like: " + postToLike.likers.length);
-    console.log("thisPostLikers a utiliser pour l'update sans like: " + thisPostLikers.length);
-   
     if (likeAuthor.id !== postToLike.authorId && req.body.likeIt) {
       //l'autheur du post ne peut liker sont propre post
       thisPostLikers.push(likeAuthor.id);
       postToLike.likers = thisPostLikers;
-      console.log("postToLike.likers si liKeIt: " + postToLike.likers.length);
-      console.log("thisPostLikers a utiliser pour l'update si liKeIt: " + thisPostLikers.length);
       likeAuthorFavories.push(postToLike.id);
       likeAuthor.myLikes = likeAuthorFavories;
     }
-    const promisePostLikersUpdate = Post.updateOne({ _id: postToLike.id }, { likers: thisPostLikers });
-    const promiseUsersLikesUpdate = User.updateOne({ _id: likeAuthor.id }, { myLikes: likeAuthorFavories });
-    Promise.all([promisePostLikersUpdate,promiseUsersLikesUpdate])
+    const promisePostLikersUpdate = Post.updateOne(
+      { _id: postToLike.id },
+      { likers: thisPostLikers }
+    );
+    const promiseUsersLikesUpdate = User.updateOne(
+      { _id: likeAuthor.id },
+      { myLikes: likeAuthorFavories }
+    );
+    Promise.all([promisePostLikersUpdate, promiseUsersLikesUpdate])
       .then(res.status(200).json({ message: "appréciation enregistrée" }))
       .catch((error) => res.status(400).json({ error }));
   });
 };
 exports.deletePost = async (req, res, next) => {
   //Ciblage de la post à modifier avec l'id présent dans l'url.
-  const eraser = await User.findById(req.auth.userId)
+  const eraser = await User.findById(req.auth.userId);
   console.log(eraser.name);
-  Post.findById( req.params.id).then((post) => {
+  Post.findById(req.params.id).then((post) => {
     //Test si la requète ne provient pas du propriétaire du post.
-    if (post.authorId === req.auth.userId || eraser.role ==='gpm-admin') {
-       //récupération du nom du fichier,
-       const filename = post.imageUrl.split("/images/")[1];
-       //supression du fichier image,
-       fs.unlink(
-         `images/${filename}`,
-         //puis suppression définitive de l'objet/post dans la BDD.
-         () => {
-           post
-             .deleteOne({ _id: req.params.id })
-             .then(() => {
-               res.status(200).json({ message: "post supprimée" });
-             })
-             .catch((error) => {
-               res.status(400).json({ error });
-             });
-         }
-       );    
-    }
-    else {  res.status(401).json({ message: "Non-autorisé !" });
+    if (post.authorId === req.auth.userId || eraser.role === "gpm-admin") {
+      //récupération du nom du fichier,
+      const filename = post.imageUrl.split("/images/")[1];
+      //supression du fichier image,
+      fs.unlink(
+        `images/${filename}`,
+        //puis suppression définitive de l'objet/post dans la BDD.
+        () => {
+          post
+            .deleteOne({ _id: req.params.id })
+            .then(() => {
+              res.status(200).json({ message: "post supprimé" });
+            })
+            .catch((error) => {
+              res.status(400).json({ error });
+            });
+        }
+      );
+    } else {
+      res.status(401).json({ message: "Non-autorisé !" });
     }
   });
 };
