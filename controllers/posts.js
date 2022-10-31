@@ -8,16 +8,22 @@ exports.getAllPosts = (req, res, next) => {
     .then(async (posts) => {
       const allPostsToFront = posts.map(async (post) => {
         let authorDetails = await User.findById(post.authorId);
-        return {
-          id: post.id,
-          title: post.title,
-          author: await authorDetails.name,
-          authorPhoto: await authorDetails.photo,
-          textContent: post.textContent,
-          likers: post.likers,
-          imageUrl: post.imageUrl,
-          createdAt: post.createdAt,
-        };
+        if (authorDetails) {
+          return {
+            id: post.id,
+            title: post.title,
+            author: await authorDetails.name,
+            authorPhoto: await authorDetails.photo,
+            textContent: post.textContent,
+            likers: post.likers,
+            imageUrl: post.imageUrl,
+            createdAt: post.createdAt,
+          };
+        } else {
+          res
+            .status(401)
+            .json({ message: "cet utilisateur n'est plus inscrit" });
+        }
       });
       Promise.all(allPostsToFront).then((arrayOfPosts) =>
         res.status(200).json(arrayOfPosts)
@@ -72,7 +78,6 @@ exports.createPost = async (req, res, next) => {
 exports.modifyPost = async (req, res, next) => {
   const postTargeted = await Post.findById(req.params.id);
   let postUpdate = {};
-  let imageUrl = "";
   const invalidUser = postTargeted.authorId !== req.auth.userId;
   if (invalidUser) {
     res.status(403).json({ message: "Non-autorisé !" });
@@ -91,12 +96,11 @@ exports.modifyPost = async (req, res, next) => {
           req.file.filename
         }`,
         authorId: req.auth.userId,
-      }
-      console.log(postUpdate);;
+      };
     } else {
       postUpdate = { ...req.body, authorId: req.auth.userId };
     }
-    
+
     Post.updateOne(
       { _id: req.params.id },
       { ...postUpdate, _id: req.params.id } //réécrire l'_id présent dans l'url pour le cas ou un autre _id serait inséré dans le body..
@@ -107,7 +111,6 @@ exports.modifyPost = async (req, res, next) => {
 };
 
 exports.likePost = async (req, res, next) => {
-  console.log("liker userId = " + req.auth.userId);
   const findPostToLike = Post.findById(req.params.id);
   const findLikeAuthor = User.findById(req.auth.userId);
   Promise.all([findPostToLike, findLikeAuthor]).then((datas) => {
@@ -143,7 +146,6 @@ exports.likePost = async (req, res, next) => {
 exports.deletePost = async (req, res, next) => {
   //Ciblage de la post à modifier avec l'id présent dans l'url.
   const eraser = await User.findById(req.auth.userId);
-  console.log(eraser.name);
   Post.findById(req.params.id).then((post) => {
     //Test si la requète ne provient pas du propriétaire du post.
     if (post.authorId === req.auth.userId || eraser.role === "gpm-admin") {
