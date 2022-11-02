@@ -5,9 +5,9 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 
 router.post('/signin', ctrlUser.createUser)
-router.get("/profile/all",auth,ctrlUser.getAllUser)
-router.put("/update",auth,multer,ctrlUser.profilUpdater)
 router.post('/login', ctrlUser.login)
 router.post('/logout', ctrlUser.logout)
+router.get("/profile/all",auth,ctrlUser.getAllUser)
+router.put("/update",auth,multer,ctrlUser.profilUpdater)
 
 module.exports = router

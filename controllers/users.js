@@ -47,6 +47,7 @@ exports.createUser = (req, res, next) => {
             .json({
               message: "Compte créé !",
               userProfile: {
+                id: newUser._id,
                 email: newUser.email,
                 name: newUser.name,
                 photo: newUser.photo,
@@ -91,6 +92,7 @@ exports.login = (req, res, next) => {
             expires: expiryDate,
           });
           const userProfile = {
+            id: user._id,
             email: user.email,
             name: user.name,
             photo: user.photo,
