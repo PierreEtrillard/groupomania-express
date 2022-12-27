@@ -1,14 +1,14 @@
 # PRÉPARATION DU SERVER 
 
 ## 1) Mettre le fichier .env à jour avec les données suivantes:
-[ ] mongoLogin = \"<votre Mongo connection string>"\
-[ ] ADMINISTRATORS = \["email_des_moderateurs"]\
+* [ ] mongoLogin = \"votre Mongo connection string"
+* [ ] ADMINISTRATORS = \["email_des_moderateurs"]
 
  _Par defaut le server tourne sur le port 3000, vous pouvez choisir un port différent en renseignant:_
 * PORT = *le numéro de port de votre choix* 
     (verifiez aussi que l'appli front requète vers le même port) 
 
-[ ] TOKEN_KEY 'chaineDeCaractèreAléatoirePourleCryptageDuJetonD'Authentification"
+* [ ] TOKEN_KEY 'chaineDeCaractèreAléatoirePourleCryptageDuJetonD'Authentification"
 
 ## 2) Installer les modules node suivants depuis le dossier BACK:
 
@@ -43,17 +43,17 @@ Utiliser ces feedback plutôt que la réponse server standard est une bonne prat
 
 |VERBS:     |    URI:              |           REQUESTS:                                               |           RESPONSES:                               |
 |-----------|----------------------|-------------------------------------------------------------------|----------------------------------------------------|
-|POST       |auth/signin           | Body\{email:string, password}\                                    | cookie httpOnly:token\(userId)\, \{userprofile}\   |
-|POST       |auth/login            | Body\{email:string, password}\                                    | cookie httpOnly:token\(userId)\, \{userprofile}\   |
-|POST       |auth/logout           | cookie httpOnly:token\(userId)\                                   | clearCookie httpOnly:token\(userId)\               |
-|GET        |auth/profile/all      | cookie httpOnly:token\(userId)\                                   | \[users, ]\                                        |
-|PUT        |auth/update           | cookie httpOnly:token\(userId),Body\{userprofileUpdated}\         | \{userprofile}\                                    |
+|GET        |auth/profile/all      | cookie httpOnly:token\(userId)                                    | \[users, ]                                         |
+|POST       |auth/signin           | Body\{email:string, password}                                     | cookie httpOnly:token\(userId)\, \{userprofile}    |
+|POST       |auth/login            | Body\{email:string, password}                                     | cookie httpOnly:token\(userId)\, \{userprofile}    |
+|POST       |auth/logout           | cookie httpOnly:token\(userId)                                    | clearCookie httpOnly:token\(userId)                |
+|PUT        |auth/update           | cookie httpOnly:token\(userId), Body\{userprofileUpdated}         | \{userprofile}                                     |
 |           |                      |                                                                   |                                                    |
-|GET        |posts/                | cookie httpOnly:token\(userId)\                                   | \[tous les posts]\                                 |
-|GET        |posts/{id}            | cookie httpOnly:token\(userId)\                                   | \{post}\                                           |
-|POST       |posts/                | cookie httpOnly:token\(userId)\ Body\{post}\                      | \{message:string}\                                 |
-|PUT        |posts/{id}/update     | cookie httpOnly:token\(userId)\ Body\{post}\                      | \{message:string}\                                 |
-|DELETE     |posts/{id}/delete     | cookie httpOnly:token\(userId)\                                   | \{message:string}\                                 |
+|GET        |posts/                | cookie httpOnly:token\(userId)                                    | \[tous les posts]                                  |
+|GET        |posts/{id}            | cookie httpOnly:token\(userId)                                    | \{post}                                            |
+|POST       |posts/                | cookie httpOnly:token\(userId), Body\{post}                       | \{message:string}                                  |
+|PUT        |posts/{id}/update     | cookie httpOnly:token\(userId), Body\{post}                       | \{message:string}                                  |
+|DELETE     |posts/{id}/delete     | cookie httpOnly:token\(userId)                                    | \{message:string}                                  |
 |           |                      |                                                                   |                                                    |
-|POST       |posts/{id}/like       | cookie httpOnly:token\(userId)\ Body\{likeIt:boolean}\            | \{message:string}\                                 |
+|POST       |posts/{id}/like       | cookie httpOnly:token\(userId), Body\{likeIt:boolean}             | \{message:string}                                  |
 
