@@ -28,12 +28,11 @@
                 - fs (gestionaire de fichiers)
 
 ## 3) Pour démarrer le server saisissez dans la console soit:
-
-npm run start
+`npm run start`
     ou
-node server
+`node server`
     ou
-nodemon (si installé)
+`nodemon` (si installé)
 
 # INDICATIONS A FOURNIR AU FRONT
 
@@ -55,7 +54,7 @@ Utiliser ces feedback plutôt que la réponse server standard est une bonne prat
 |GET        |posts/{id}            | cookie httpOnly:token\(userId)\                                   | \{post}\                                           |
 |POST       |posts/                | cookie httpOnly:token\(userId)\ Body\{post}\                      | \{message:string}\                                 |
 |PUT        |posts/{id}/update     | cookie httpOnly:token\(userId)\ Body\{post}\                      | \{message:string}\                                 |
-|           |                      |                                                                   |                                                    |
 |DELETE     |posts/{id}/delete     | cookie httpOnly:token\(userId)\                                   | \{message:string}\                                 |
+|           |                      |                                                                   |                                                    |
 |POST       |posts/{id}/like       | cookie httpOnly:token\(userId)\ Body\{likeIt:boolean}\            | \{message:string}\                                 |
 
