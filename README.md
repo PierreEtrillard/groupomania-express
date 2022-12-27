@@ -1,4 +1,5 @@
 # PRÉPARATION DU SERVER 
+
 ## 1) Mettre le fichier .env à jour avec les données suivantes:
 
     mongoLogin = "<votre Mongo connection string>"
@@ -11,7 +12,7 @@
     TOKEN_KEY 'chaineDeCaractèreAléatoirePourleCryptageDuJetonD'Authentification"
 
 ## 2) Installer les modules node suivants depuis le dossier BACK:
--
+
 ### DÉPENDANCES REQUISES :
 `npm install --save` >installera les modules suivants: dotenv express mongoose mongoose-unique-validator bcrypt jsonwebtoken validator multer fs
 
@@ -27,7 +28,7 @@
                 - fs (gestionaire de fichiers)
 
 ## 3) Pour démarrer le server saisissez dans la console soit:
--
+
 npm run start
     ou
 node server
@@ -42,7 +43,7 @@ Utiliser ces feedback plutôt que la réponse server standard est une bonne prat
 
 # DÉTAILS DES ROUTES 
 
-|VERBS:     |    URI:              |            req:                                                   |           RESPONSES:                               |
+|VERBS:     |    URI:              |           REQUESTS:                                               |           RESPONSES:                               |
 |-----------|----------------------|-------------------------------------------------------------------|----------------------------------------------------|
 |POST       |auth/signin           | Body\{email:string, password}\                                    | cookie httpOnly:token\(userId)\, \{userprofile}\   |
 |POST       |auth/login            | Body\{email:string, password}\                                    | cookie httpOnly:token\(userId)\, \{userprofile}\   |
