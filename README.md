@@ -2,14 +2,14 @@
 
 ## 1) Mettre le fichier .env à jour avec les données suivantes:
 
-    mongoLogin = "<votre Mongo connection string>"
-    ADMINISTRATORS = ["email_des_moderateurs"]
+    - mongoLogin = "<votre Mongo connection string>"
+    - ADMINISTRATORS = ["email_des_moderateurs"]
 
-    >Par defaut le server tourne sur le port 3000, vous pouvez choisir un port différent en renseignant:
-    PORT = *le numéro de port de votre choix* 
+    *Par defaut le server tourne sur le port 3000, vous pouvez choisir un port différent en renseignant:*
+    - PORT = *le numéro de port de votre choix* 
     (verifiez aussi que l'appli front requète vers le même port) 
 
-    TOKEN_KEY 'chaineDeCaractèreAléatoirePourleCryptageDuJetonD'Authentification"
+    - TOKEN_KEY 'chaineDeCaractèreAléatoirePourleCryptageDuJetonD'Authentification"
 
 ## 2) Installer les modules node suivants depuis le dossier BACK:
 
