@@ -2,14 +2,14 @@
 
 ## 1) Mettre le fichier .env à jour avec les données suivantes:
 
-    - mongoLogin = "<votre Mongo connection string>"
-    - ADMINISTRATORS = ["email_des_moderateurs"]
+    + mongoLogin = "<votre Mongo connection string>"
+    + ADMINISTRATORS = ["email_des_moderateurs"]
 
-    *Par defaut le server tourne sur le port 3000, vous pouvez choisir un port différent en renseignant:*
-    - PORT = *le numéro de port de votre choix* 
+    _Par defaut le server tourne sur le port 3000, vous pouvez choisir un port différent en renseignant:_
+    + PORT = *le numéro de port de votre choix* 
     (verifiez aussi que l'appli front requète vers le même port) 
 
-    - TOKEN_KEY 'chaineDeCaractèreAléatoirePourleCryptageDuJetonD'Authentification"
+    + TOKEN_KEY 'chaineDeCaractèreAléatoirePourleCryptageDuJetonD'Authentification"
 
 ## 2) Installer les modules node suivants depuis le dossier BACK:
 
@@ -17,15 +17,15 @@
 `npm install --save` >installera les modules suivants: dotenv express mongoose mongoose-unique-validator bcrypt jsonwebtoken validator multer fs
 
 ### Description des modules à installer :
-                - dotenv (gestionnaire des variables d'environement)
-                - express (server node)
-                - mongoose (connection à MongoDb )
-                - mongoose-unique-validator (plugin vérifiant l'unicitée d'un utilisateur pour la route POST ../signup)
-                - bcrypt (hashage password)
-                - jsonwebtoken (créateur de jetons d'identification)
-                - validator (regex mail et password)
-                - multer (gestion des téléchargements de fichiers)
-                - fs (gestionaire de fichiers)
+                + dotenv (gestionnaire des variables d'environement)
+                + express (server node)
+                + mongoose (connection à MongoDb )
+                + mongoose-unique-validator (plugin vérifiant l'unicitée d'un utilisateur pour la route POST ../signup)
+                + bcrypt (hashage password)
+                + jsonwebtoken (créateur de jetons d'identification)
+                + validator (regex mail et password)
+                + multer (gestion des téléchargements de fichiers)
+                * fs (gestionaire de fichiers)
 
 ## 3) Pour démarrer le server saisissez dans la console soit:
 `npm run start`
